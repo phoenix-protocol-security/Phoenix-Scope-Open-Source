@@ -1,0 +1,1298 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PhoeniX Scope - Yes We Hack</title>
+        <link rel="icon" href="/static/logo.png" type="image/x-icon" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Handjet:wght@200&family=Pixelify+Sans&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300&display=swap"
+            rel="stylesheet"
+        />
+        <script
+            src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+            integrity="sha384-mr2JOC8miS6zJoXBY6jtHJL9SBMxR5xFUJvb8yP9O1gDii7HONPe0qcO7J5zW5P6"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+            integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+Wy3u5h/6a5LlEh6L6U/iF1stAZMWLb0GNI"
+            crossorigin="anonymous"
+        ></script>
+
+        <script>
+            function checkLocalStorageAndRedirect() {
+                var data = localStorage.getItem("apiData");
+
+                if (
+                    !data ||
+                    !JSON.parse(data).program_data ||
+                    JSON.parse(data).program_data.length === 0
+                ) {
+                    // If the data is not found or 'Programs' is empty, redirect to the root endpoint
+                    window.location.href = "/";
+                }
+            }
+
+            function showLoader(show) {
+                var loader = document.querySelector(".terminal-loader");
+                if (loader) {
+                    document.querySelector(".overlay").style.display = "block";
+                    loader.style.display = "block";
+                }
+            }
+
+            function hideLoader() {
+                var loader = document.querySelector(".terminal-loader");
+                if (loader) {
+                    document.querySelector(".overlay").style.display = "none";
+                    loader.style.display = "none";
+                }
+            }
+
+            function debounce(func, wait) {
+                var timeout;
+
+                return function executedFunction() {
+                    var context = this;
+                    var args = arguments;
+
+                    var later = function () {
+                        timeout = null;
+                        func.apply(context, args);
+                    };
+
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            function updateTableWithNewData(newData) {
+                localStorage.setItem("apiData", JSON.stringify(newData));
+                apiData = JSON.parse(localStorage.getItem("apiData"));
+
+                // Reset to the first page to display the beginning of the new dataset
+                currentPage = 1;
+
+                // Re-render the table with the new data starting from the first page
+                renderTable(currentPage);
+            }
+
+            function sendAPIRequest(params) {
+                // var username = localStorage.getItem("username");
+                var token = localStorage.getItem("token");
+
+                if (!token) {
+                    alert(
+                        "Authentication token is missing. Please login again.",
+                    );
+                    return;
+                }
+
+                // Construct the API endpoint with dynamic parameters
+                var protocol = window.location.protocol;
+                var hostname = window.location.hostname;
+                var port = hostname === "127.0.0.1" ? ":8080" : "";
+                var queryString = Object.keys(params)
+                    .map((key) => `${key}=${params[key]}`)
+                    .join("&");
+                var apiEndpoint = `${protocol}//${hostname}${port}/yeswehack/programs?&${queryString}&ywh_token=${token}`;
+
+                // Show loader
+                showLoader();
+
+                fetch(apiEndpoint, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        // console.log(data);
+                        localStorage.setItem("apiData", JSON.stringify(data));
+                        updateTableWithNewData(data);
+                    })
+                    .catch((error) => {
+                        console.error(
+                            "There was a problem with the fetch operation:",
+                            error,
+                        );
+                        alert("Error: There was a problem with the API call.");
+                    })
+                    .finally(() => {
+                        hideLoader();
+                    });
+            }
+
+            var debouncedSendAPIRequest = debounce(function (params) {
+                sendAPIRequest(params);
+            }, 1000);
+
+            function updateAPIRequest() {
+                var selectedBadges =
+                    document.querySelectorAll(".badge.selected");
+                var params = {
+                    vdp: false,
+                    hidden: false,
+                };
+
+                var allProgramSelected = false; // Flag to check if "All Program" is selected
+
+                selectedBadges.forEach(function (badge) {
+                    if (badge.textContent === "All Programs") {
+                        allProgramSelected = true; // Set the flag if "All Program" is selected
+                    } else if (badge.textContent === "Private Programs") {
+                        params.hidden = true;
+                    } else if (badge.textContent === "VDP Programs") {
+                        params.vdp = true;
+                    }
+                });
+
+                // If "All Program" is selected, override other params to be false
+                if (allProgramSelected) {
+                    params = {
+                        vdp: false,
+                        hidden: false,
+                    };
+                }
+
+                // Use the debounced version to send the API request
+                debouncedSendAPIRequest(params);
+            }
+
+            function insertAndStyleBountyCell(row, bountyValue) {
+                var cell = row.insertCell(2);
+
+                cell.textContent = bountyValue ? "True" : "False";
+
+                if (bountyValue) {
+                    cell.style.color = "#ff23bf";
+                }
+            }
+
+            const itemsPerPage = 3;
+            let currentPage = 1;
+            let apiData = JSON.parse(localStorage.getItem("apiData"));
+
+            function renderTable(page) {
+                const tableBody = document.getElementById("tableBody");
+                const pageInfo = document.getElementById("pageInfo");
+                tableBody.innerHTML = ""; // Clear previous content
+
+                // Object to track added programs
+                const addedPrograms = {};
+
+                apiData["program_data"]
+                    .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                    .forEach(function (program) {
+                        var scopeItemsContent = program["InScope"]
+                            .map(function (item) {
+                                var typeInfo = item.Category
+                                    ? `<span class="type-info">${item.Category}</span>: `
+                                    : "";
+                                if (item.Category === "web-application") {
+                                    // For URL type, create a clickable link
+                                    return `<div class="scope-item">${typeInfo}<a href="https://${item.Target}" target="_blank">${item.Target}🔗</a></div>`;
+                                } else {
+                                    // For other types, display the item as text
+                                    return `<div class="scope-item">${typeInfo}${item.Target}</div>`;
+                                }
+                            })
+                            .join("");
+
+                        // Only proceed if scopeItemsContent is not empty
+                        if (scopeItemsContent) {
+                            var row = tableBody.insertRow();
+
+                            // Program Name with Link
+                            var programNameCell = row.insertCell(0);
+                            var programHandle = program["Program Handle"];
+                            var programNameLink = document.createElement("a");
+                            programNameLink.href = `https://yeswehack.com/programs/${programHandle}`;
+                            programNameLink.textContent = program["Title"];
+                            programNameCell.appendChild(programNameLink);
+
+                            // Check if the program is already added based on Program Handle or Program Name
+                            if (addedPrograms[programHandle]) {
+                                return; // Skip this program as it's already added
+                            }
+
+                            // Program Type
+                            row.insertCell(1).textContent =
+                                program["Program Type"];
+
+                            insertAndStyleBountyCell(row, program["Bounty"]);
+
+                            var creationDate = new Date(
+                                program["Creation date"],
+                            );
+                            row.insertCell(3).textContent = "N/A";
+
+                            // Scope Items Cell
+                            var scopeItemsCell = row.insertCell(4);
+                            scopeItemsCell.classList.add("scope-items-cell");
+                            scopeItemsCell.innerHTML = scopeItemsContent;
+
+                            addedPrograms[programHandle] = true;
+                        }
+                    });
+                pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(
+                    apiData["program_data"].length / itemsPerPage,
+                )}`;
+                updatePageButtonsState();
+            }
+
+            function updatePageButtonsState() {
+                const totalPages = Math.ceil(
+                    apiData["program_data"].length / itemsPerPage,
+                );
+                const prevPageBtn = document.getElementById("prevPageBtn");
+                const nextPageBtn = document.getElementById("nextPageBtn");
+
+                prevPageBtn.disabled = currentPage === 1; // Disable Prev button on first page
+                nextPageBtn.disabled = currentPage === totalPages; // Disable Next button on last page
+
+                // Add or remove focus class based on availability
+                if (currentPage !== 1) {
+                    prevPageBtn.classList.add("background-highlight");
+                } else {
+                    prevPageBtn.classList.remove("background-highlight");
+                }
+
+                if (currentPage !== totalPages) {
+                    nextPageBtn.classList.add("background-highlight");
+                } else {
+                    nextPageBtn.classList.remove("background-highlight");
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                checkLocalStorageAndRedirect();
+
+                // Function to update page information
+                function updatePageInfo() {
+                    const totalPages = Math.ceil(
+                        apiData["program_data"].length / itemsPerPage,
+                    );
+                    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                }
+
+                // Example: Previous page button click event
+                document
+                    .getElementById("prevPageBtn")
+                    .addEventListener("click", function () {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderTable(currentPage);
+                        }
+                    });
+
+                // Example: Next page button click event
+                document
+                    .getElementById("nextPageBtn")
+                    .addEventListener("click", function () {
+                        const totalPages = Math.ceil(
+                            apiData["program_data"].length / itemsPerPage,
+                        );
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderTable(currentPage);
+                        }
+                    });
+
+                // Initial rendering on page load
+                renderTable(currentPage);
+            });
+
+            function addBadges() {
+                var badgeContainer = document.getElementById("badgeContainer");
+                var clearButton = document.getElementById("clearButton");
+
+                // Clear existing badges only when "x" is clicked
+                var clearBadges = false;
+
+                var badgeNames = [
+                    "Private Programs",
+                    "VDP Programs",
+                    "Apply Filter",
+                ];
+
+                badgeContainer.innerHTML = "";
+
+                badgeNames.forEach(function (badgeName, index) {
+                    var badge = document.createElement("span");
+                    badge.className = "badge bg-secondary";
+                    badge.innerHTML = badgeName;
+
+                    // Add a click event listener to toggle badge selection
+                    badge.addEventListener("click", function () {
+                        if (badgeName === "Apply Filter") {
+                            // If "x" is clicked, set the flag to clear badges
+                            clearBadges = true;
+                            renderSelectedBadges(clearBadges);
+                        } else {
+                            // Toggle the selected state of the badge
+                            badge.classList.toggle("selected");
+                            updateAPIRequest();
+                            // updateSelectedBadges();
+                        }
+                    });
+
+                    badgeContainer.appendChild(badge);
+
+                    // Add a space between badges, except for the last one
+                    if (index < badgeNames.length - 1) {
+                        var space = document.createTextNode(" ");
+                        badgeContainer.appendChild(space);
+                    }
+                });
+
+                // Display the "Clear" button if there are selected badges
+                clearButton.style.display = badgeContainer.querySelector(
+                    ".selected",
+                )
+                    ? "inline-block"
+                    : "none";
+            }
+
+            function clearBadges() {
+                var badgeContainer = document.getElementById("badgeContainer");
+                var clearButton = document.getElementById("clearButton");
+
+                // Clear all badges
+                badgeContainer.innerHTML = "";
+
+                // Hide the "Clear" button
+                clearButton.style.display = "none";
+
+                var params = {
+                    vdp: false,
+                    hidden: false,
+                };
+
+                // Call the API for all programs
+                debouncedSendAPIRequest(params);
+            }
+
+            function renderSelectedBadges(clearBadges) {
+                var badgeContainer = document.getElementById("badgeContainer");
+                var selectedBadges =
+                    badgeContainer.querySelectorAll(".selected");
+                var clearButton = document.getElementById("clearButton");
+
+                // Clear existing badges only if the flag is true
+                if (clearBadges) {
+                    badgeContainer.innerHTML = "";
+                    // Hide the "Clear" button when clearing badges
+                    clearButton.style.display = "none";
+                }
+
+                // Render the selected badges
+                selectedBadges.forEach(function (selectedBadge, index, set) {
+                    badgeContainer.appendChild(selectedBadge.cloneNode(true));
+
+                    // Add a space between badges, except for the last one
+                    if (index < set.length - 1) {
+                        var space = document.createTextNode(" ");
+                        badgeContainer.appendChild(space);
+                    }
+                });
+
+                // Display the "Clear" button if there are selected badges
+                clearButton.style.display = badgeContainer.querySelector(
+                    ".selected",
+                )
+                    ? "flex"
+                    : "none";
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                var badge = document.getElementById("BadgeDiv");
+
+                badge.addEventListener("click", function () {
+                    badge.classList.toggle("clicked");
+                });
+            });
+
+            function downloadCsv() {
+                const apiData = JSON.parse(localStorage.getItem("apiData"));
+
+                if (
+                    apiData &&
+                    Array.isArray(apiData.program_data) &&
+                    apiData.program_data.length > 0
+                ) {
+                    let csvContent = "data:text/csv;charset=utf-8,";
+
+                    // CSV header
+                    csvContent +=
+                        "Program Name,Program Type,Offer Rewards,Created Date,Scope Items\r\n";
+
+                    // CSV data
+                    apiData.program_data.forEach((program) => {
+                        let row = [];
+
+                        // Program Name with URL
+                        let programHandle = program["Program Handle"];
+                        let programName = `https://hackerone.com/${programHandle}`;
+                        row.push(`"${programName}"`);
+
+                        row.push(program["Program Type"]);
+                        row.push(program["Offer Rewards"]);
+
+                        let creationDate = new Date(
+                            program["Creation date"],
+                        ).toLocaleDateString();
+                        row.push(creationDate);
+
+                        let scopeItems = program["Program In-Scope Items"]
+                            .map((item) => {
+                                if (item.Type === "URL") {
+                                    // For URL type, prepend https://
+                                    return `https://${item.Asset}`;
+                                } else {
+                                    // For other types, display the item as text
+                                    return `${item.Asset}`;
+                                }
+                            })
+                            .join("\n");
+                        row.push(`"${scopeItems.replace(/"/g, '""')}"`);
+
+                        csvContent += row.join(",") + "\r\n";
+                    });
+
+                    // Create a data URI and initiate download
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "YesWeHack_data.csv");
+                    document.body.appendChild(link); // Required for Firefox
+                    link.click();
+                } else {
+                    console.log(
+                        "No data available for download. Check localStorage content:",
+                        apiData,
+                    );
+                }
+            }
+        </script>
+
+        <style>
+            body {
+                font-family: "Chakra Petch", sans-serif;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                background-image: url("/static/desktop_program_dash.png");
+                background-size: 95% auto;
+                background-position: center top;
+                background-color: #000000;
+                background-repeat: no-repeat;
+                text-align: center;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            h1 {
+                text-align: center;
+                color: #00c2cb;
+                font-family: "Chakra Petch", sans-serif;
+                margin-top: 2rem;
+                height: 12px;
+                font-size: 22px;
+            }
+
+            a {
+                color: grey;
+                transition: 0.2s;
+                cursor: pointer;
+                text-decoration: none;
+                font-weight: 900;
+                font-size: 16px;
+            }
+
+            a:hover {
+                color: #00c2cb;
+                text-decoration: none;
+                font-size: 20px;
+                box-shadow: 0 0 5px rgba(0, 194, 203, 0.8);
+                background-color: black;
+                width: max-content;
+            }
+
+            .overlay {
+                position: fixed; /* Cover the entire viewport */
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(
+                    0,
+                    0,
+                    0,
+                    0.8
+                ); /* Semi-transparent black */
+                z-index: 998;
+                display: none;
+            }
+
+            @keyframes blinkCursor {
+                50% {
+                    border-right-color: transparent;
+                }
+            }
+
+            @keyframes typeAndDelete {
+                0%,
+                10% {
+                    width: 0;
+                }
+                45%,
+                55% {
+                    width: 14.2em;
+                } /* adjust width based on content */
+                90%,
+                100% {
+                    width: 0;
+                }
+            }
+
+            .terminal-loader {
+                display: none;
+                border: 0.1em solid #333;
+                background-color: #1a1a1a;
+                color: #ff23bf;
+                font-family: "Courier New", Courier, monospace;
+                font-size: 1em;
+                padding: 1.5em 1em;
+                width: 20em;
+                margin: 100px auto;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+                position: fixed;
+                top: 40%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                box-sizing: border-box;
+                z-index: 999;
+            }
+
+            .terminal-header {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1.5em;
+                background-color: #333;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                padding: 0 0.4em;
+                box-sizing: border-box;
+            }
+
+            .terminal-controls {
+                float: right;
+            }
+
+            .control {
+                display: inline-block;
+                width: 0.6em;
+                height: 0.6em;
+                margin-left: 0.4em;
+                border-radius: 50%;
+                background-color: #777;
+            }
+
+            .control.close {
+                background-color: #e33;
+            }
+
+            .control.minimize {
+                background-color: #ee0;
+            }
+
+            .control.maximize {
+                background-color: #0b0;
+            }
+
+            .terminal-title {
+                float: left;
+                line-height: 1.5em;
+                color: #eee;
+            }
+
+            .text {
+                display: inline-block;
+                white-space: nowrap;
+                overflow: hidden;
+                border-right: 0.2em solid green; /* Cursor */
+                animation:
+                    typeAndDelete 4s steps(11) infinite,
+                    blinkCursor 0.5s step-end infinite alternate;
+                margin-top: 1.5em;
+            }
+
+            .background-highlight {
+                background-color: #ff23bf;
+                color: white;
+            }
+
+            .container-fluid {
+                width: 100%;
+                max-width: 1600px;
+                margin-top: 1rem;
+                text-align: left;
+                height: auto;
+            }
+
+            .d-flex.justify-content-center.align-items-center.text-center {
+                text-align: center;
+            }
+
+            #data-table {
+                border-collapse: collapse;
+                table-layout: auto;
+                border: 4px solid #00c2cb;
+                margin: 8px auto;
+                width: 85%;
+            }
+            #data-table th,
+            #data-table td {
+                border: 2px solid #00c2cb;
+                padding: 8px;
+                text-align: left;
+                color: darkgray;
+                height: 6rem;
+                width: auto;
+                position: relative;
+                background-color: black;
+            }
+
+            #data-table th {
+                background-color: black;
+                color: #efcfe3;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            #data-table tr {
+                height: 40px;
+                width: auto;
+            }
+
+            #data-table td {
+                overflow: hidden;
+            }
+
+            #data-table tr:nth-child(even) {
+                background-color: #333333;
+            }
+
+            #data-table tr:nth-child(odd) {
+                background-color: #444444;
+            }
+
+            #data-table .scope-items-cell {
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                max-height: 180px;
+            }
+
+            #data-table .scope-item {
+                display: block;
+                margin-right: 5px;
+                padding: 5px;
+            }
+
+            .type-info {
+                background-color: grey;
+                color: black;
+                padding: 2px 5px;
+                margin-right: 5px;
+                border-radius: 3px;
+            }
+
+            #downloadCsvBtn {
+                background: #ff23bf !important;
+                color: white !important;
+                padding: 15px 20px;
+                border: none;
+                border-radius: 0px 10px 10px 10px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                width: max-content;
+                font-weight: 800;
+            }
+
+            #downloadCsvBtn:hover {
+                background: #444 !important;
+                color: #ff23bf !important;
+                border: 1px solid #ff23bf;
+                border-radius: 0px 10px 10px 10px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                width: max-content;
+            }
+
+            #downloadCsvBtn.special {
+                background: #ff23bf !important;
+                color: white !important;
+                padding: 15px 20px;
+                border: none;
+                border-radius: 0px 10px 10px 10px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                width: max-content;
+            }
+
+            button {
+                position: relative;
+                background: #444;
+                color: #fff;
+                text-decoration: none;
+                text-transform: uppercase;
+                border: none;
+                letter-spacing: 0.1rem;
+                font-size: 1rem;
+                padding: 1rem 3rem;
+                transition: 0.2s;
+                margin-top: 1rem;
+                margin-right: 1rem;
+            }
+
+            button:hover {
+                letter-spacing: 0.2rem;
+                padding: 1.1rem 3.1rem;
+                background: var(--clr);
+                color: var(--clr);
+                animation: box 3s infinite;
+            }
+
+            button::before {
+                content: "";
+                position: absolute;
+                inset: 2px;
+                /* background: #272822; */
+            }
+
+            button span {
+                position: relative;
+                z-index: 1;
+            }
+
+            button i {
+                position: absolute;
+                inset: 0;
+                display: block;
+                background: #272822;
+            }
+
+            button i::before {
+                content: "";
+                position: absolute;
+                width: 10px;
+                height: 2px;
+                left: 80%;
+                top: -2px;
+                border: 2px solid var(--clr);
+                transition: 0.2s;
+            }
+
+            button:hover i::before {
+                width: 15px;
+                left: 20%;
+                animation: move 3s infinite;
+            }
+
+            button i::after {
+                content: "";
+                position: absolute;
+                width: 10px;
+                height: 2px;
+                left: 20%;
+                bottom: -2px;
+                border: 2px solid var(--clr);
+                background: #272822;
+                transition: 0.2s;
+            }
+
+            button:hover i::after {
+                width: 15px;
+                left: 80%;
+                animation: move 3s infinite;
+            }
+
+            @keyframes move {
+                0% {
+                    transform: translateX(0);
+                }
+                50% {
+                    transform: translateX(5px);
+                }
+                100% {
+                    transform: translateX(0);
+                }
+            }
+
+            @keyframes box {
+                0% {
+                    box-shadow: #27272c;
+                }
+                50% {
+                    box-shadow: 0 0 25px var(--clr);
+                }
+                100% {
+                    box-shadow: #27272c;
+                }
+            }
+
+            .badge {
+                position: relative;
+                width: max-content;
+                justify-content: center;
+                margin-top: 4px;
+                margin-left: 5px;
+                padding: 5px 10px;
+                background-color: black;
+                color: white;
+                display: flex;
+                cursor: pointer;
+                border-bottom-style: groove;
+                border-color: cyan;
+                font-family: "Chakra Petch", sans-serif;
+                font-size: 12px;
+            }
+
+            .badge:hover {
+                border-color: pink;
+            }
+            .badge.clicked {
+                border-color: red;
+                animation: box 3s infinite;
+            }
+
+            #badgeContainer {
+                display: inline-flex;
+                position: fixed;
+                justify-content: center;
+                align-items: center;
+                margin-left: 29rem;
+                margin-top: 36px;
+                transform: translateX(-3%);
+            }
+
+            #BadgeDiv {
+                display: flex;
+                flex-wrap: wrap;
+                position: fixed;
+                margin-top: -67px;
+                margin-left: 113px;
+                cursor: pointer;
+            }
+
+            button.choose-filter-btn {
+                height: 8px;
+                width: 159px;
+                border-bottom-style: groove;
+                transition: inherit;
+                font-family: "Chakra Petch", sans-serif;
+                margin-left: 24rem;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: border-box;
+                background-color: black;
+                color: lightcyan;
+                white-space: nowrap;
+                text-decoration: none;
+                font-size: 10px;
+                transition: 0.2s;
+                margin-top: 29px;
+            }
+            button.choose-filter-btn::before {
+                content: "";
+                background: border-box;
+                background-color: darkslategrey;
+                color: lightcyan;
+                white-space: nowrap;
+                z-index: -1;
+            }
+
+            button.btn-clear {
+                border-bottom-style: groove;
+                transition: inherit;
+                font-family: "Chakra Petch", sans-serif;
+                margin-left: 27rem;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: #ff23bf;
+                border-color: #ff23bf;
+            }
+
+            #clearButtonContainer {
+                margin-top: 6px;
+                position: fixed;
+                display: inline-flex;
+                margin-left: 20rem;
+                align-items: center;
+                justify-content: center;
+            }
+
+            @media (min-width: 577px) and (max-width: 768px) {
+                body {
+                    width: 76% !important;
+                    background-image: url("/static/mobile_dashboard.png");
+                    background-size: 92% 128%;
+                    background-position: center center;
+                    background-repeat: no-repeat;
+                    height: 100vh;
+                    margin: 0;
+                    padding: 0;
+                    display: block;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .container-fluid {
+                    margin-top: 7rem;
+                    margin-left: 1rem;
+                    width: 128% !important;
+                    height: 100vh;
+                }
+
+                button.choose-filter-btn {
+                    margin-top: 3rem;
+                    margin-left: 1rem;
+                }
+
+                .d-flex.justify-content-center.align-items-center.text-center {
+                    text-align: center;
+                    margin-top: 11rem;
+                }
+
+                #badgeContainer {
+                    margin-top: 2rem;
+                    margin-left: 6rem;
+                }
+
+                button.btn-clear {
+                    margin-top: 1.5rem;
+                    margin-left: 7rem;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar {
+                    width: 0.3em;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-track {
+                    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-thumb {
+                    background-color: darkgrey;
+                    outline: 1px solid slategrey;
+                }
+            }
+
+            @media (min-width: 769px) and (max-width: 992px) {
+                body {
+                    width: 76% !important;
+                    background-image: url("/static/mobile_dashboard.png");
+                    background-size: 92% 128%;
+                    background-position: center center;
+                    background-repeat: no-repeat;
+                    height: 100vh;
+                    margin: 0;
+                    padding: 0;
+                    display: block;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .container-fluid {
+                    margin-top: 7rem;
+                    margin-left: 1rem;
+                    width: 128% !important;
+                    height: 100vh;
+                }
+
+                button.choose-filter-btn {
+                    margin-top: 3rem;
+                    margin-left: 1rem;
+                }
+
+                .d-flex.justify-content-center.align-items-center.text-center {
+                    text-align: center;
+                    margin-top: 15rem;
+                }
+
+                #badgeContainer {
+                    margin-top: 2rem;
+                    margin-left: 6rem;
+                }
+
+                button.btn-clear {
+                    margin-top: 1.5rem;
+                    margin-left: 7rem;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar {
+                    width: 0.3em;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-track {
+                    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-thumb {
+                    background-color: darkgrey;
+                    outline: 1px solid slategrey;
+                }
+            }
+
+            @media (min-width: 993px) and (max-width: 1200px) {
+                body {
+                    width: 76% !important;
+                    background-size: 99% 97%;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    height: 100vh;
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .container-fluid {
+                    margin-top: 19rem;
+                    margin-left: 13rem;
+                    width: 128% !important;
+                    height: 100vh;
+                }
+
+                button.choose-filter-btn {
+                    margin-top: 3rem;
+                    margin-left: 1rem;
+                }
+
+                h1 {
+                    margin-top: 1rem;
+                }
+
+                .d-flex.justify-content-center.align-items-center.text-center {
+                    text-align: center;
+                    margin-top: 15rem;
+                }
+
+                #badgeContainer {
+                    margin-top: 2rem;
+                    margin-left: 6rem;
+                }
+
+                button.btn-clear {
+                    margin-top: 1.5rem;
+                    margin-left: 7rem;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar {
+                    width: 0.3em;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-track {
+                    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-thumb {
+                    background-color: darkgrey;
+                    outline: 1px solid slategrey;
+                }
+            }
+
+            @media (min-width: 1201px) {
+                body {
+                    width: 76% !important;
+                    background-size: 98% 100%;
+                    background-position: top;
+                    background-repeat: no-repeat;
+                    background-repeat: no-repeat;
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .container-fluid {
+                    margin-top: 2rem;
+                    margin-left: 6rem;
+                    width: 70% !important;
+                    height: 100vh;
+                    position: fixed;
+                    transform: translate(20px, 30px);
+                    top: 0;
+                    left: 0;
+                }
+
+                .table-container {
+                    height: auto;
+                    width: 100%;
+                }
+
+                #data-table {
+                    width: 126%;
+                    margin-left: 5px;
+                }
+
+                button.choose-filter-btn {
+                    margin-top: 3rem;
+                    margin-left: 26rem;
+                }
+
+                h1 {
+                    margin-left: 24rem;
+                    justify-content: center;
+
+                    align-items: center;
+                    display: flex;
+                }
+
+                .d-flex.justify-content-center.align-items-center.text-center {
+                    text-align: center;
+                    margin-left: 20rem;
+                }
+
+                #badgeContainer {
+                    margin-top: 2rem;
+                    margin-left: 30rem;
+                }
+
+                button.btn-clear {
+                    margin-top: 1.5rem;
+                    margin-left: 31rem;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar {
+                    width: 0.3em;
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-track {
+                    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+                }
+
+                #data-table .scope-items-cell::-webkit-scrollbar-thumb {
+                    background-color: darkgrey;
+                    outline: 1px solid slategrey;
+                }
+            }
+        </style>
+    </head>
+
+    <body class="bg-dark text-white">
+        <div class="overlay"></div>
+        <div class="terminal-loader">
+            <div class="terminal-header">
+                <div class="terminal-title">API Status</div>
+                <div class="terminal-controls">
+                    <div class="control close"></div>
+                    <div class="control minimize"></div>
+                    <div class="control maximize"></div>
+                </div>
+            </div>
+            <div class="text">Filtering Programs...</div>
+        </div>
+        <div class="container-fluid">
+            <h1 class="mt-5 text-center">Yes We Hack Program Details</h1>
+            <button
+                type="button"
+                class="btn btn-primary choose-filter-btn"
+                onclick="addBadges()"
+            >
+                Filter Tags
+            </button>
+            <div id="BadgeContainerWrapper">
+                <div id="BadgeDiv">
+                    <div id="badgeContainer"></div>
+                    <div id="clearButtonContainer">
+                        <button
+                            type="button"
+                            class="btn btn-clear choose-filter-btn"
+                            id="clearButton"
+                            onclick="clearBadges()"
+                            style="display: none"
+                        >
+                            Clear All filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="table-dark table" id="data-table">
+                    <thead>
+                        <tr>
+                            <th>Program Name</th>
+                            <th>Program Type</th>
+                            <th>Offer Rewards</th>
+                            <th>Creation Date</th>
+                            <th>Scope Items</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination buttons -->
+            <!-- <div id="TablePageButton"> -->
+
+            <div
+                class="d-flex justify-content-center align-items-center text-center"
+            >
+                <br />
+                <div id="pageInfo" style="color: whitesmoke"></div>
+                <button
+                    id="downloadCsvBtn"
+                    class="btn ml-2"
+                    onclick="downloadCsv()"
+                >
+                    Download CSV
+                </button>
+                <button
+                    id="prevPageBtn"
+                    class="btn btn-primary ml-2"
+                    style="--clr: #00c2cb"
+                >
+                    <span>Prev Page</span><i></i>
+                </button>
+                <button
+                    id="nextPageBtn"
+                    class="btn btn-secondary ml-2"
+                    style="--clr: #ff44cc"
+                >
+                    <span>Next Page</span><i></i>
+                </button>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+requests
+python-dateutil
+pytz
+jinja2
+pymongo
+pytest
+httpx
+python-multipart
+aiohttp
+grequests
+bs4

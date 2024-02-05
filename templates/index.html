@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/static/logo.png" type="image/x-icon" />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+        />
+
+        <title>Phoenix Scope</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Handjet:wght@200&family=Pixelify+Sans&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300&display=swap"
+            rel="stylesheet"
+        />
+        <!-- jQuery library -->
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+            integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/terser@5.7.0/dist/bundle.min.js"></script>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: "Chakra Petch", sans-serif;
+            }
+
+            body {
+                font-family: "Chakra Petch", sans-serif;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                background-image: url("/static/desktop_main.png");
+                background-size: 100% 115%;
+                background-color: #000000;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-attachment: fixed;
+                display: inline-flex;
+                height: 100vh;
+            }
+
+            #privacyPolicyModal {
+                z-index: 1500;
+            }
+
+            .tooltip-inner {
+                max-width: 200px;
+                padding: 0.25rem 0.5rem;
+                color: #000 !important;
+                text-align: center;
+                background-color: #fff !important;
+                border-radius: 0.25rem;
+            }
+
+            .bg {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 20px;
+                border-radius: 10px;
+            }
+
+            .loader {
+                width: 60px;
+                height: 40px;
+                position: relative;
+                display: inline-block;
+                --base-color: #212121;
+            }
+
+            .loader::before {
+                content: "";
+                left: 0;
+                top: 0;
+                position: absolute;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background-color: #fff;
+                background-image: radial-gradient(
+                        circle 8px at 18px 18px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 18px 0px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 0px 18px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 36px 18px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 18px 36px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 30px 5px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 30px 5px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 30px 30px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 5px 30px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 4px at 5px 5px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    );
+                background-repeat: no-repeat;
+                box-sizing: border-box;
+                animation: rotationBack 3s linear infinite;
+            }
+
+            .loader::after {
+                content: "";
+                left: 35px;
+                top: 15px;
+                position: absolute;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background-color: #fff;
+                background-image: radial-gradient(
+                        circle 5px at 12px 12px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 12px 0px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 0px 12px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 24px 12px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 12px 24px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 20px 3px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 20px 3px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 20px 20px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 3px 20px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    ),
+                    radial-gradient(
+                        circle 2.5px at 3px 3px,
+                        var(--base-color) 100%,
+                        transparent 0
+                    );
+                background-repeat: no-repeat;
+                box-sizing: border-box;
+                animation: rotationBack 4s linear infinite reverse;
+            }
+
+            @keyframes rotationBack {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(-360deg);
+                }
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+            }
+
+            label {
+                font-size: 18px;
+                color: #ffffff;
+                margin-bottom: 5px;
+            }
+
+            .card {
+                border: none;
+                border-top: 5px solid rgba(140, 82, 255, 1);
+                background-color: #2e2e2e;
+                transition: backdrop-filter 0.3s ease;
+                color: #000000;
+                font-weight: 500;
+                position: absolute;
+                display: contents;
+            }
+            .card:focus {
+                backdrop-filter: blur(40px);
+            }
+            .card:hover {
+                backdrop-filter: blur(90px);
+            }
+
+            .main_div {
+                height: 100vh;
+                width: 125vh !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin-left: 100px !important;
+            }
+
+            .dropdown-toggle {
+                white-space: nowrap;
+                width: 100%;
+                border-radius: 0px 8px 8px 8px;
+                background-color: #2e2e2e;
+                color: #00c2cb;
+                background-size: cover;
+                font-family: "Chakra Petch", sans-serif;
+                border: 1px solid #ff23bf;
+            }
+            .dropdown-toggle:hover {
+                background-color: #000000;
+                color: #00c2cb;
+                border: 2px solid #ff23bf;
+            }
+            .dropdown-menu {
+                background-color: #2e2e2e;
+                width: 100% !important;
+            }
+
+            .dropdown-item {
+                color: #00c2cb;
+            }
+
+            .dropdown-item:hover {
+                background-color: #ff23bf;
+                color: #ffffff;
+            }
+
+            .submit {
+                width: 100%;
+            }
+
+            .submit input {
+                width: 100%;
+                padding: 8px;
+                background-color: #ff23bf;
+                color: whitesmoke;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+                border: 1px solid #ff23bf;
+                border-radius: 0px 8px 8px 8px;
+            }
+
+            .submit input:hover {
+                color: #00c2cb;
+                border: 2px solid #ff23bf;
+                background-color: #000;
+            }
+
+            .form-control {
+                font-size: 16px;
+                padding: 10px;
+                margin-bottom: 10px;
+                border: 2px solid #ff23bf;
+                border-radius: 0px 8px 8px 8px;
+                background-color: #2e2e2e;
+            }
+
+            .form-control::placeholder {
+                color: #00c2cb;
+                background-size: cover;
+                font-family: "Chakra Petch", sans-serif;
+            }
+
+            .custom-input {
+                color: #00c2cb !important;
+                background-color: #2e2e2e !important;
+                padding: 10px;
+                border: 1px solid #ff23bf;
+            }
+
+            .custom-input:hover {
+                color: #00c2cb !important;
+                background-color: #2e2e2e !important;
+                border: 2px solid #ff23bf;
+            }
+
+            .custom-input:active,
+            .custom-input:focus {
+                outline: none;
+                background-color: #2e2e2e !important;
+                border-color: #ff23bf;
+                box-shadow: 0 0 0 0.2rem rgba(140, 82, 255, 0.25);
+            }
+
+            .custom-input:read-only,
+            .custom-input:disabled {
+                background-color: #2e2e2e;
+                border-color: #ff23bf;
+            }
+
+            input:-webkit-autofill {
+                -webkit-box-shadow: 0 0 0px 1000px #2e2e2e inset !important;
+                -webkit-text-fill-color: #00c2cb !important;
+                transition: background-color 5000s ease-in-out 0s;
+            }
+
+            /* Additional styling for focused input */
+            input:-webkit-autofill:focus {
+                -webkit-box-shadow: 0 0 0px 1000px #2e2e2e inset !important;
+                -webkit-text-fill-color: #00c2cb !important;
+            }
+
+            @media (max-width: 576px) {
+                /* Extra small devices (phones) */
+                .main_div {
+                    width: 100% !important;
+                    margin-left: 0 !important;
+                }
+                body {
+                    width: 100% !important;
+                }
+            }
+
+            @media (min-width: 577px) and (max-width: 768px) {
+                /* Small devices (tablets) */
+                .main_div {
+                    width: 100% !important;
+                }
+                .card {
+                    width: 100% !important;
+                }
+                body {
+                    width: 76% !important;
+                }
+            }
+
+            @media (min-width: 769px) and (max-width: 992px) {
+                /* Medium devices (desktops) */
+                .main_div {
+                    width: 100% !important;
+                }
+                .card {
+                    width: 100% !important;
+                }
+                body {
+                    width: 85% !important;
+                }
+            }
+
+            @media (min-width: 993px) and (max-width: 1200px) {
+                /* Large devices (large desktops) */
+                .main_div {
+                    width: 100% !important;
+                }
+                .card {
+                    width: 100% !important;
+                }
+                body {
+                    width: 86% !important;
+                }
+            }
+
+            @media (min-width: 1201px) {
+                /* Extra large devices (extra large desktops) */
+                .main_div {
+                    width: 87% !important;
+                }
+                .card {
+                    width: 100% !important;
+                }
+                body {
+                    width: 100% !important;
+                }
+            }
+        </style>
+        <script>
+            $(document).ready(function () {
+                // Show tooltip on page load
+                $("#infoIcon")
+                    .tooltip({
+                        title: "Username is required for HackerOne only.",
+                        trigger: "manual",
+                    })
+                    .tooltip("show");
+
+                // Hide tooltip after 10 seconds
+                setTimeout(function () {
+                    $("#infoIcon").tooltip("hide");
+                }, 10000);
+
+                // Show tooltip on hover after 10 seconds
+                $("#infoIcon").hover(
+                    function () {
+                        $(this).tooltip("show");
+                    },
+                    function () {
+                        $(this).tooltip("hide");
+                    },
+                );
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                // Function to show the modal for 2 seconds on page load
+                var myModal = new bootstrap.Modal(
+                    document.getElementById("privacyPolicyModal"),
+                    {
+                        backdrop: "static",
+                        keyboard: false,
+                    },
+                );
+
+                myModal.show();
+                var dropdownToggle = document.getElementById("platformType");
+                var selectedPlatform = "none"; // Default selection
+
+                // Update button text when a dropdown item is clicked
+                document
+                    .querySelectorAll(".dropdown-item")
+                    .forEach(function (item) {
+                        item.addEventListener("click", function () {
+                            selectedPlatform =
+                                this.getAttribute("data-platform");
+                            dropdownToggle.innerText = this.innerText;
+                        });
+                    });
+
+                document
+                    .getElementById("programForm")
+                    .addEventListener("submit", function (event) {
+                        event.preventDefault();
+
+                        // Validate token character count based on the selected platform
+                        var tokenInput = document.getElementById("token");
+                        var tokenValue = tokenInput.value.trim(); // Remove leading and trailing spaces
+
+                        var expectedTokenLength =
+                            getExpectedTokenLength(selectedPlatform);
+
+                        if (tokenValue.length !== expectedTokenLength) {
+                            showModal(
+                                `Error: Token for ${selectedPlatform} is Incorrect.Please try again.`,
+                            );
+                            return; // Stop form submission
+                        }
+
+                        switch (selectedPlatform) {
+                            case "HackerOne":
+                                geth1Programs();
+                                break;
+                            case "BugCrowd":
+                                getbugcrowdPrograms();
+                                break;
+                            case "Intigriti":
+                                getintigritiPrograms();
+                                break;
+                            case "YesWeHack":
+                                getywhPrograms();
+                                break;
+                        }
+                    });
+            });
+
+            function getExpectedTokenLength(platform) {
+                // Define expected token lengths for each platform
+                const tokenLengths = {
+                    HackerOne: 44,
+                    BugCrowd: 15,
+                    Intigriti: 66,
+                    YesWeHack: 893,
+                };
+                return tokenLengths[platform] || 0; // Return 0 if platform is not found
+            }
+
+            function geth1Programs() {
+                // Show the loader
+                document.getElementById("loader").style.display = "block";
+                document.getElementById("overlay").style.display = "block";
+                document.body.style.overflow = "hidden";
+
+                var username = document.getElementById("username").value;
+                var token = encodeURIComponent(
+                    document.getElementById("token").value,
+                );
+                var selectedProgram =
+                    document.getElementById("platformType").value;
+
+                // Determine the protocol and hostname
+                var protocol = window.location.protocol; // 'http:' or 'https:'
+                var hostname = window.location.hostname; // 'Dev IP', 'tools.phoenixprotocol.tech
+
+                // Append port 8080 if hostname is localhost, otherwise no port
+                var port = hostname === "127.0.0.1" ? ":8080" : "";
+
+                var apiEndpoint = `${protocol}//${hostname}${port}/hackerone/programs?private=false&bounty=false&wildcards=false&mobile_app=false&single_domain=false&username=${username}&token=${token}`;
+                fetch(apiEndpoint, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(
+                                `Network response was not ok : ${response.statusText}`,
+                            );
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        document.getElementById("loader").style.display =
+                            "none";
+                        document.getElementById("overlay").style.display =
+                            "none";
+                        localStorage.setItem("apiData", JSON.stringify(data));
+                        localStorage.setItem("username", username);
+                        localStorage.setItem("token", token);
+                        window.location.href = "/hackerone";
+                    })
+
+                    .catch((error) => {
+                        console.error(
+                            "There was a problem with the fetch operation:",
+                            error,
+                        );
+                        document.getElementById("loader").style.display =
+                            "none";
+                        document.getElementById("overlay").style.display =
+                            "none";
+                        alert("Error: There was a problem with the API call.");
+                    });
+
+                document.getElementById("username").value = "";
+                document.getElementById("token").value = "";
+                document.getElementById("platformType").selectedIndex = -1;
+            }
+
+            function getintigritiPrograms() {
+                // Show the loader
+                document.getElementById("loader").style.display = "block";
+                document.getElementById("overlay").style.display = "block";
+                document.body.style.overflow = "hidden";
+
+                var token = document.getElementById("token").value;
+
+                // Determine the protocol and hostname
+                var protocol = window.location.protocol; // 'http:' or 'https:'
+                var hostname = window.location.hostname; // 'Dev IP', 'tools.phoenixprotocol.tech
+
+                // Append port 8080 if hostname is localhost, otherwise no port
+                var port = hostname === "127.0.0.1" ? ":8080" : "";
+
+                var apiEndpoint = `${protocol}//${hostname}${port}/intigriti/programs?vdp=false&hidden=false&wildcard=false&intigriti_token=${token}`;
+                fetch(apiEndpoint, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        document.getElementById("loader").style.display =
+                            "none";
+                        document.getElementById("overlay").style.display =
+                            "none";
+                        localStorage.setItem("apiData", JSON.stringify(data));
+                        localStorage.setItem("token", token);
+                        window.location.href = "/intigriti";
+                    })
+                    .catch((error) => {
+                        console.error(
+                            "There was a problem with the fetch operation:",
+                            error,
+                        );
+                        document.getElementById("loader").style.display =
+                            "none";
+                        document.getElementById("overlay").style.display =
+                            "none";
+                        alert("Error: There was a problem with the API call.");
+                    });
+
+                document.getElementById("username").value = "";
+                document.getElementById("token").value = "";
+                document.getElementById("platformType").selectedIndex = -1;
+            }
+
+            function getywhPrograms() {
+                // Show the loader
+                document.getElementById("loader").style.display = "block";
+                document.getElementById("overlay").style.display = "block";
+                document.body.style.overflow = "hidden";
+
+                //var username = document.getElementById("username").value;
+                var token = document.getElementById("token").value;
+                // var selectedProgram = document.getElementById("platformType").value;
+
+                // Determine the protocol and hostname
+                var protocol = window.location.protocol; // 'http:' or 'https:'
+                var hostname = window.location.hostname; // 'Dev IP', 'tools.phoenixprotocol.tech
+
+                // Append port 8080 if hostname is localhost, otherwise no port
+                var port = hostname === "127.0.0.1" ? ":8080" : "";
+
+                var apiEndpoint = `${protocol}//${hostname}${port}/yeswehack/programs?vdp=false&hidden=false&ywh_token=${token}`;
+                fetch(apiEndpoint, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        document.getElementById("loader").style.display =
+                            "none";
+                        document.getElementById("overlay").style.display =
+                            "none";
+                        localStorage.setItem("apiData", JSON.stringify(data));
+                        localStorage.setItem("token", token);
+                        window.location.href = "/ywh";
+                    })
+                    .catch((error) => {
+                        console.error(
+                            "There was a problem with the fetch operation:",
+                            error,
+                        );
+                        document.getElementById("loader").style.display =
+                            "none";
+                        document.getElementById("overlay").style.display =
+                            "none";
+                        alert("Error: There was a problem with the API call.");
+                    });
+
+                document.getElementById("username").value = "";
+                document.getElementById("token").value = "";
+                document.getElementById("platformType").selectedIndex = -1;
+            }
+
+            function getbugcrowdPrograms() {
+                console.log("Bug Crowd");
+            }
+
+            function showModal(message) {
+                document.getElementById("modalMessage").innerText = message;
+                var errorModal = new bootstrap.Modal(
+                    document.getElementById("errorModal"),
+                );
+                errorModal.show();
+            }
+        </script>
+    </head>
+
+    <body>
+        <div class="overlay" id="overlay"></div>
+        <div class="container-fluid">
+            <div
+                class="row w-100 d-flex justify-content-center align-item-center main_div"
+            >
+                <div class="col-12 col-md-8 col-xxl-5">
+                    <div class="card px-2 py-3">
+                        <form id="programForm">
+                            <div class="mb-3">
+                                <label for="userName" class="form-label">
+                                    Username
+                                    <img
+                                        id="infoIcon"
+                                        src="static/infoIcon.svg"
+                                        alt="Info Icon"
+                                        style="
+                                            vertical-align: middle;
+                                            cursor: pointer;
+                                        "
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        data-bs-delay="15000"
+                                        title="Username is required for HackerOne only."
+                                    />
+                                </label>
+                                <input
+                                    type="text"
+                                    class="form-control custom-input"
+                                    id="username"
+                                    placeholder="Enter your Username"
+                                />
+                            </div>
+                            <div class="mb-3">
+                                <label for="Tokenlabel" class="form-label"
+                                    ><span style="color: #ff23bf" ;>*</span
+                                    >Token</label
+                                >
+                                <input
+                                    type="Token"
+                                    class="form-control custom-input"
+                                    id="token"
+                                    placeholder="Enter your Token"
+                                />
+                            </div>
+                            <div class="mb-3">
+                                <label for="platformLabel" class="form-label"
+                                    ><span style="color: #ff23bf" ;>*</span
+                                    >Platform</label
+                                >
+                            </div>
+                            <div class="dropdown w-100 mb-3">
+                                <button
+                                    class="btn btn-secondary dropdown-toggle"
+                                    type="button"
+                                    id="platformType"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                >
+                                    Choose Your Platform
+                                </button>
+                                <ul
+                                    class="dropdown-menu"
+                                    aria-labelledby="platformType"
+                                >
+                                    <!-- <li><a class="dropdown-item" data-platform="none"></a></li> -->
+                                    <li>
+                                        <a
+                                            class="dropdown-item"
+                                            data-platform="HackerOne"
+                                            >HackerOne</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a
+                                            class="dropdown-item"
+                                            data-platform="Intigriti"
+                                            >Intigriti</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a
+                                            class="dropdown-item"
+                                            data-platform="YesWeHack"
+                                            >Yes We Hack</a
+                                        >
+                                    </li>
+                                    <!-- <li>
+                    <a class="dropdown-item" data-platform="BugCrowd"
+                      >BugCrowd</a
+                    >
+                  </li> -->
+                                </ul>
+                            </div>
+                            <div class="submit w-100 mb-3">
+                                <input
+                                    type="submit"
+                                    value="Get All Programs"
+                                    id="programForm"
+                                />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg" id="loader" style="display: none">
+            <div class="loader"></div>
+        </div>
+
+        <!-- Token Validation Modal -->
+        <div class="modal" id="errorModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header" style="text-align: center">
+                        <i
+                            class="bi bi-exclamation-triangle-fill text-warning me-2"
+                            style="font-size: 1.5rem"
+                        ></i>
+                        <h5 class="modal-title" style="margin: 0 163px">
+                            ⚠️WARNING!
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Policy Modal -->
+        <div
+            class="modal fade"
+            id="privacyPolicyModal"
+            tabindex="-1"
+            aria-labelledby="privacyPolicyModalLabel"
+            aria-hidden="true"
+        >
+            <div
+                class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+                style="max-height: 50vh"
+            >
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5
+                            class="modal-title"
+                            id="privacyPolicyModalLabel"
+                            style="
+                                color: #000;
+                                font-weight: 900;
+                                font-size: 27pt;
+                            "
+                        >
+                            Privacy Policy for Phoenix Scope
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                    <div class="modal-body">
+                        <h3>Last Updated: 25th January, 2024</h3>
+                        <p>
+                            Welcome to Phoenix Scope, a dedicated platform
+                            designed to streamline the process of finding bug
+                            bounty programs from leading platforms such as
+                            HackerOne, Intigriti, and Bugcrowd. Our commitment
+                            to your privacy and data protection is paramount.
+                            This Privacy Policy outlines the types of
+                            information we process, how we handle it, and the
+                            measures in place to protect your privacy.
+                        </p>
+
+                        <h3>Information We Collect</h3>
+                        <p>
+                            Phoenix Scope operates on a real-time data fetching
+                            model, meaning we do not store personal data of our
+                            users. The information processed through our tool
+                            includes:
+                        </p>
+                        <ul>
+                            <li>
+                                Publicly available data from HackerOne,
+                                Intigriti, and Bugcrowd regarding bug bounty
+                                programs.
+                            </li>
+                            <li>
+                                Non-personal data such as query parameters to
+                                customize data fetching, which does not include
+                                any user identifiers or sensitive information.
+                            </li>
+                        </ul>
+
+                        <h3>Use of Information</h3>
+                        <p>
+                            The information collected is used solely for the
+                            purpose of fetching and displaying relevant bug
+                            bounty program data from the specified platforms. We
+                            do not use this information for any other purposes,
+                            such as profiling or marketing.
+                        </p>
+
+                        <h3>Data Sharing and Disclosure</h3>
+                        <p>
+                            Phoenix Scope does not share, sell, rent, or trade
+                            user information with third parties for their
+                            commercial purposes. The data fetched is presented
+                            directly to the user without any intermediary
+                            storage or processing.
+                        </p>
+
+                        <h3>Data Security</h3>
+                        <p>
+                            We employ industry-standard security measures to
+                            protect the data processed through our tool.
+                            However, given the nature of our service (real-time
+                            data fetching without storage), the risk associated
+                            with data processing is significantly minimized.
+                        </p>
+
+                        <h3>Changes to This Policy</h3>
+                        <p>
+                            We may update this Privacy Policy from time to time
+                            to reflect changes in our practices or for other
+                            operational, legal, or regulatory reasons. We
+                            encourage you to review this Privacy Policy
+                            periodically to stay informed about our data
+                            protection practices.
+                        </p>
+
+                        <h3>Contact Us</h3>
+                        <p>
+                            For questions or concerns regarding this Privacy
+                            Policy, please contact us at
+                            <a href="mailto:0xfalcon@phoenixprotocol.tech"
+                                >0xfalcon@phoenixprotocol.tech</a
+                            >.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"
+        ></script>
+    </body>
+</html>
