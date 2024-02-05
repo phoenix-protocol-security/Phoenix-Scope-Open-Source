@@ -1,4 +1,5 @@
 # Phoenix-Scope-Open-Source
+![](bug-fixing-flatline.png)
 
 ## Description
 
@@ -20,3 +21,17 @@ A microservice application that provides an APIs to fetch the scope of bug bount
 - Deployed on AWS, current version is only helpful for getting the data for specific platform based on the API token and username(For H1 only) provided.
 - Version 1.2 includes the Basic Asset Enumeration and Alert features on the dashboard itself.
 - Version 2.0 includes monitoring and custome alerts for scope changes.
+
+## How to Set up Guide ?
+
+- Clone the repository either in your local system or VPS: `git clone https://github.com/0xfa1c/Phoenix-Scope-Open-Source.git phoenixScope`
+- Navigate to the repository: `cd phoenixScope`
+- Execute the Command: `docker-compose up --build -d`
+- Visit the URL: `http://localhost:8080` or `http://VPS_PUBLIC_IP:8080`
+- If you want to access the Swagger Documentation of the APIs just append `/docs` at the end of the URL
+
+## Post Installation
+
+- Check if your docker is properly deployed and running:
+  -  List all the docker containers available: `docker ps`
+  -  Check the logs of the container using container ID: `docker logs <containerID>`
